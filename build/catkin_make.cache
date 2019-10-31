@@ -1,2 +1,0 @@
-testrig
--DCATKIN_DEVEL_PREFIX=/home/skogforsk/catkin_ws/devel -DCMAKE_INSTALL_PREFIX=/home/skogforsk/catkin_ws/install -G Unix Makefiles
