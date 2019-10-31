@@ -1,3 +1,4 @@
 ## onödiga macfiler
 .DS_store
-
+## build mappen
+build/
