@@ -1,0 +1,8 @@
+prefix=/home/skogforsk/catkin_ws/install
+
+Name: testrig
+Description: Description of testrig
+Version: 1.0.0
+Cflags: -I/home/skogforsk/catkin_ws/install/include
+Libs: -L/home/skogforsk/catkin_ws/install/lib 
+Requires: roscpp std_msgs
