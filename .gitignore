@@ -1,9 +1,9 @@
 ## onödiga macfiler
 .DS_store
 
-##devel/
+devel/
 logs/
-##build/
+build/
 bin/
 lib/
 msg_gen/
