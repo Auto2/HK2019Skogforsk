@@ -1,0 +1,405 @@
+<?xml version="1.0" ?>
+<robot name="testrig" xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:include filename="$(find testrig)/urdf/common_properties.xacro"/>
+  <!-- <xacro:include filename="$(find hktest)/urdf/rig.gazebo.xacro"/> 
+  <xacro:include filename="$(find hktest)/urdf/rig.transmission.xacro"/> -->
+  <xacro:property name="z" value="0.360"/>
+  <!-- LIDAR -->
+  <xacro:arg name="gpu" default="false"/>
+  <xacro:property name="gpu" value="$(arg gpu)" />
+  <!-- CAMERA -->
+  <xacro:property name="camera_link" value="0.05" /> <!-- Size of square 'camera' box -->
+  <xacro:property name="imu_link" value="0.05" />
+  
+
+
+  <link name="base_footprint">
+  </link>
+
+  <joint name="base_joint" type="fixed">
+    <parent link="base_footprint"/>
+    <child link="base_link1"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+
+<!-- Front -->
+  <link name="base_link1">
+    <visual>
+      <origin xyz="0 0 ${z}" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://testrig/stl/framvagn.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="grey"/>
+    </visual>
+	<collision>
+		<origin xyz="0 0 ${z}" rpy="0 0 0"/>
+		<geometry>
+			<mesh filename="package://testrig/stl/framvagn.stl" scale="0.001 0.001 0.001"/>
+		</geometry>
+	</collision>
+    <inertial>
+      <origin xyz="0 0 ${z}" />
+      <mass value="20" />
+      <inertia ixx="4.767" ixy="0" ixz="0"
+               iyy="1.653" iyz="0.863"
+               izz="4.094" />
+      </inertial>
+  </link>
+  
+  <!-- LIDAR, CAMERA, IMU -->
+
+  <joint name="camera_joint" type="fixed">
+    <axis xyz="0 1 0" />
+    <origin xyz="0 0.4315 0.65" rpy="0 0 1.57"/>
+    <parent link="base_link1"/>
+    <child link="camera_link"/>
+  </joint>
+
+  <!-- Camera -->
+  <link name="camera_link">
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+    <box size="${camera_link} ${camera_link} ${camera_link}"/>
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+    <box size="${camera_link} ${camera_link} ${camera_link}"/>
+      </geometry>
+      <material name="Black"/>
+    </visual>
+    <inertial>
+      <mass value="1e-5" />
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6" />
+    </inertial>
+  </link>
+
+<!-- Front LW-->
+  <joint name="wheel_front_left_joint" type="continuous">
+    <parent link="base_link1"/>
+    <child link="wheel_front_left_link"/>
+    <origin xyz="-0.130 0.160 ${z-0.252}" rpy="1.57 -1.57 0"/>
+    <axis xyz="0 1 0"/> 
+  </joint>
+
+  <link name="wheel_front_left_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://testrig/stl/wheel.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="dark"/>
+    </visual>
+    <collision>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<geometry>
+			<mesh filename="package://testrig/stl/wheel.stl" scale="0.001 0.001 0.001"/>
+		</geometry>
+	</collision>
+    <inertial>
+      <origin xyz="0 0 0" />
+      <mass value="1" />
+      <inertia ixx="0.023" ixy="0" ixz="0"
+               iyy="0.020" iyz="0"
+               izz="0.023" />
+      </inertial>
+  </link>
+<!-- Front LW-->
+  <joint name="wheel_front_right_joint" type="continuous">
+    <parent link="base_link1"/>
+    <child link="wheel_front_right_link"/>
+    <origin xyz="0.130 0.160 ${z-0.252}" rpy="1.57 1.57 0"/>
+    <axis xyz="0 -1 0"/> 
+  </joint>
+
+  <link name="wheel_front_right_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://testrig/stl/wheel.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="dark"/>
+    </visual>
+    <collision>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<geometry>
+			<mesh filename="package://testrig/stl/wheel.stl" scale="0.001 0.001 0.001"/>
+		</geometry>
+	</collision>
+    <inertial>
+      <origin xyz="0 0 0" />
+      <mass value="1" />
+      <inertia ixx="0.023" ixy="0" ixz="0"
+               iyy="0.020" iyz="0"
+               izz="0.023" />
+      </inertial>
+  </link>
+<!-- ______________________________ -->
+<!-- Joint between front and middle -->
+  <joint name="front_joint_middle" type="revolute">
+    <parent link="base_link1"/>
+    <child link="front_link_middle"/>
+    <limit effort="1000" lower="-0.7" upper="0.7" velocity="0.5" />
+    <origin xyz="0.0 -0.070 ${z-0.035}" rpy="1.57 0 0"/>
+    <axis xyz="0 1 0"/> 
+  </joint>
+
+  <link name="front_link_middle">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://testrig/stl/pin.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="orange"/>
+    </visual>
+    <collision>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<geometry>
+			<mesh filename="package://testrig/stl/pin.stl" scale="0.001 0.001 0.001"/>
+		</geometry>
+	</collision>
+    <inertial>
+      <origin xyz="0 0 0" />
+      <mass value="1" />
+      <inertia ixx="0" ixy="0" ixz="0"
+               iyy="0" iyz="0"
+               izz="0" />
+     </inertial>
+
+  </link>
+
+<!-- Middle -->
+  <joint name="middle_joint_front" type="fixed">
+    <parent link="front_link_middle" />
+    <child link = "middle_base" />
+    <origin xyz="0.0 0.0 0" rpy="-1.57 0.0 1.57" /> 
+  </joint>
+
+  <link name="middle_base">
+    <visual>
+      <origin xyz="-0.05 -0.460 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://testrig/stl/mitten.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="grey"/>
+    </visual>
+    <collision>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<geometry>
+			<mesh filename="package://testrig/stl/mitten.stl" scale="0.001 0.001 0.001"/>
+		</geometry>
+	</collision>
+    <inertial>
+      <origin xyz="0 0 0" />
+      <mass value="10" />
+      <inertia ixx="1.223" ixy="0.097" ixz="0"
+               iyy="0.268" iyz="0"
+               izz="1.125" />
+     </inertial>
+  </link>
+
+<!-- Middle RW-->
+  <joint name="wheel_middle_right_joint" type="continuous">
+    <parent link="middle_base" />
+    <child link = "wheel_middle_right_link" />
+    <origin xyz="-0.218 -0.330 -0.130" rpy="-1.57 0 0" /> 
+    <axis xyz="0 -1 0"/> 
+  </joint>
+
+  <link name="wheel_middle_right_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://testrig/stl/wheel.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="dark"/>
+    </visual>
+    <collision>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<geometry>
+			<mesh filename="package://testrig/stl/wheel.stl" scale="0.001 0.001 0.001"/>
+		</geometry>
+	</collision>
+    <inertial>
+      <origin xyz="0 0 0" />
+      <mass value="1" />
+      <inertia ixx="0.023" ixy="0" ixz="0"
+               iyy="0.020" iyz="0"
+               izz="0.023" />
+      </inertial>
+
+  </link>
+
+<!-- Middle LW-->
+  <joint name="wheel_middle_left_joint" type="continuous">
+    <parent link="middle_base" />
+    <child link = "wheel_middle_left_link" />
+    <origin xyz="-0.218 -0.330 0.130" rpy="1.57 0 0.0" />
+    <axis xyz="0 1 0"/> 
+  </joint>
+
+  <link name="wheel_middle_left_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://testrig/stl/wheel.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="dark"/>
+    </visual>
+    <collision>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<geometry>
+			<mesh filename="package://testrig/stl/wheel.stl" scale="0.001 0.001 0.001"/>
+		</geometry>
+	</collision>
+    <inertial>
+      <origin xyz="0 0 0" />
+      <mass value="1" />
+      <inertia ixx="0.023" ixy="0" ixz="0"
+               iyy="0.020" iyz="0"
+               izz="0.023" />
+      </inertial>
+
+  </link>
+
+<!-- ______________________________ -->
+<!-- Joint between middle and back -->
+  <joint name="middle_joint_back" type="revolute">
+    <parent link="middle_base" />
+    <child link = "middle_link_back" />
+    <limit effort="1000" lower="-0.7" upper="0.7" velocity="0.5" />
+    <origin xyz="0 -0.520 0" rpy="0 0 1.57" /> 
+    <axis xyz="0 1 0"/> 
+  </joint>
+
+  <link name="middle_link_back">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://testrig/stl/pin.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="orange"/>
+    </visual>
+    <collision>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<geometry>
+			<mesh filename="package://testrig/stl/pin.stl" scale="0.001 0.001 0.001"/>
+		</geometry>
+	</collision>
+    <inertial>
+      <origin xyz="0 0 0" />
+      <mass value="1" />
+      <inertia ixx="0" ixy="0" ixz="0"
+               iyy="0" iyz="0"
+               izz="0" />
+     </inertial>
+  </link>
+
+<!-- Back -->
+  <joint name="back_joint_middle" type="fixed">
+    <parent link="middle_link_back" />
+    <child link = "back_base" />
+    <origin xyz="0.0 0.0 0" rpy="0 0 -1.57" /> 
+  </joint>
+
+
+  <link name="back_base">
+    <visual>
+      <origin xyz="-0.05 -0.360 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://testrig/stl/bak.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="grey"/>
+    </visual>
+    <collision>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<geometry>
+			<mesh filename="package://testrig/stl/bak.stl" scale="0.001 0.001 0.001"/>
+		</geometry>
+	</collision>
+    <inertial>
+      <origin xyz="0 0 0" />
+      <mass value="7" />
+      <inertia ixx="0.656" ixy="0.058" ixz="0"
+               iyy="0.271" iyz="0"
+               izz="0.562" />
+     </inertial>
+
+  </link>
+
+<!-- Back RW -->
+  <joint name="wheel_back_right_joint" type="continuous">
+    <parent link="back_base" />
+    <child link = "wheel_back_right_link" />
+    <origin xyz="-0.218 -0.330 -0.130" rpy="-1.57 0 0" /> 
+    <axis xyz="0 -1 0"/> 
+  </joint>
+
+  <link name="wheel_back_right_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://testrig/stl/wheel.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="dark"/>
+    </visual>
+    <collision>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<geometry>
+			<mesh filename="package://testrig/stl/wheel.stl" scale="0.001 0.001 0.001"/>
+		</geometry>
+	</collision>
+    <inertial>
+      <origin xyz="0 0 0" />
+      <mass value="1" />
+      <inertia ixx="0.023" ixy="0" ixz="0"
+               iyy="0.020" iyz="0"
+               izz="0.023" />
+      </inertial>
+
+  </link>
+<!-- Back LW-->
+  <joint name="wheel_back_left_joint" type="continuous">
+    <parent link="back_base" />
+    <child link = "wheel_back_left_link" />
+    <origin xyz="-0.218 -0.330 0.130" rpy="1.57 0 0" />
+    <axis xyz="0 1 0"/> 
+  </joint> 
+
+  <link name="wheel_back_left_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://testrig/stl/wheel.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="dark"/>
+    </visual>
+    <collision>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<geometry>
+			<mesh filename="package://testrig/stl/wheel.stl" scale="0.001 0.001 0.001"/>
+		</geometry>
+	</collision>
+    <inertial>
+      <origin xyz="0 0 0" />
+      <mass value="1" />
+      <inertia ixx="0.023" ixy="0" ixz="0"
+               iyy="0.020" iyz="0"
+               izz="0.023" />
+      </inertial>
+  </link>
+  
+  <!-- <gazebo>
+	<plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+    </plugin>
+  </gazebo> -->
+
+</robot>
+
+
+
+

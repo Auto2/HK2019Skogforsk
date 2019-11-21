@@ -1,0 +1,48 @@
+<launch>
+
+
+  <!-- TESTRIG LAUNCH CODE -->
+
+  <node name="motor_controller_node" pkg="testrig" type="motor_controller_node" output="screen" />
+
+  <node name="turn_radius_node" pkg="testrig" type="turn_radius_node.py" output="screen" />
+
+  <node name="action_decider_node" pkg="testrig" type="action_decider_node.py" output="screen" />
+
+  <node name="pose_calc_node" pkg="testrig" type="pose_calc.py" output="screen" />
+
+  <node name="arduino_motor_node" pkg="rosserial_python" type="serial_node.py" output="screen">
+	<param name="port" value="/dev/ttyACM0" />
+	<param name="baud" value="57600" />
+  </node>
+
+  <node name="waist_twist_control" pkg="rosserial_python" type="serial_node.py" output="screen" >
+	<param name ="port" value="/dev/ttyACM1" />
+	<param name ="baud" value="57600"/>
+  </node>
+
+  <node name="pendulum_arm_control" pkg="rosserial_python" type="serial_node.py" output="screen" >
+	<param name = "port" value = "/dev/ttyACM2" />
+	<param name = "baud" value = "57600"/>
+  </node>
+
+  <!-- ZED STEREO CAMERA LAUNCH CODE -->
+
+    <arg name="svo_file"             default="" /> <!-- <arg name="svo_file" default="path/to/svo/file.svo"> -->
+    <arg name="stream"               default="" /> <!-- <arg name="stream" default="<ip_address>:<port>"> -->
+
+    <arg name="node_name"            default="zed_node" />
+    <arg name="camera_model"         default="zed" /> <!-- 'zed' or 'zedm' -->
+    <arg name="publish_urdf"         default="true" />
+
+    <group ns="zed">
+        <include file="$(find zed_wrapper)/launch/zed_camera.launch">
+            <arg name="svo_file"            value="$(arg svo_file)" />
+            <arg name="stream"              value="$(arg stream)" />
+            <arg name="node_name"           value="$(arg node_name)" />
+            <arg name="camera_model"        value="$(arg camera_model)" />
+            <arg name="publish_urdf"        value="$(arg publish_urdf)" />
+        </include>
+    </group>
+
+</launch>
