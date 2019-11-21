@@ -1,5 +1,5 @@
-/*
-  * This "translates" action from keyboard node to pin msg sent to arduino
+/* 
+s "translates" action from keyboard node to pin msg sent to arduino
   * Pretty easy and can change motor functionality a lot without ever touching the 'ino
 */
 
@@ -7,7 +7,7 @@
 #include <ros/console.h>
 #include "std_msgs/Int64.h"
 
-bool DEBUG = true;
+bool DEBUG = false;
 
 // publisher and subscriber objects
 ros::Publisher pin_pub;
@@ -21,9 +21,9 @@ std_msgs::Int64 pwm_pin;
 int motor_override = 0;
 
 // pin LUT for different actions, corresponding to the keypad on a standard PC
-int pin_actions[] = {0b0, 0b0, 0b0,
-                     0b0, 0b0, 0b0,		//Unsure if they are correct 
-                     0b0, 0b0, 0b0};
+int pin_actions[] = {0b111110101110, 0b111110101110, 0b111010101110,
+                     0b000000000000, 0b000000000000, 0b000000000000,		//Unsure if they are correct 
+                     0b111101011101, 0b111101011101, 0b111101011101};
 
 int pinCalc(int action)
 // translates motor action to pin output
@@ -66,10 +66,10 @@ void action_callback(const std_msgs::Int64::ConstPtr &action_msg)
                                  "Forward Left",  "Forward",  "Forward Right"};
     ROS_INFO("Received action:");
     ROS_INFO_STREAM(action_list[action]);
-    char pin_unpk[8];
-    for(int i=0; i<8; i++)
+    char pin_unpk[12];
+    for(int i=0; i<12; i++)
     {
-      pin_unpk[7-i] = (pin_msg.data)%2;
+      pin_unpk[11-i] = (pin_msg.data)%2;
       pin_msg.data = (pin_msg.data)>>1;
     }
     if(motor_override==0){ ROS_INFO("Motor override inactive."); }
@@ -99,10 +99,8 @@ void override_callback(const std_msgs::Int64::ConstPtr &override_msg)
 
 void pwm_callback(const std_msgs::Int64::ConstPtr &pwm_msg){
   int pwm = pwm_msg->data;	//Unpack
-  pwm_pin.data = 10*pwm;
+  pwm_pin.data = pwm;
   pwm_pub.publish(pwm_pin);
-  ROS_INFO("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-  //ROS_INFO("pwm: (%ld)", pwm_pin.data);
 }
 
 int main(int argc, char **argv)
@@ -122,3 +120,4 @@ int main(int argc, char **argv)
   ros::spin();
   return 0;
 }
+

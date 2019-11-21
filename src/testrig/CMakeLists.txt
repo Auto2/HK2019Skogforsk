@@ -4,17 +4,19 @@ project(testrig)
 find_package(catkin REQUIRED COMPONENTS
   std_msgs
   roscpp
+  joint_state_publisher
 )
 
 add_compile_options(-std=c++11)
 
 catkin_package(
-  INCLUDE_DIRS include
+  INCLUDE_DIRS #include
   CATKIN_DEPENDS roscpp std_msgs
 )
 
 include_directories(
-  include ${catkin_INCLUDE_DIRS}
+  #include
+  ${catkin_INCLUDE_DIRS}
 )
 
 add_executable(motor_controller_node src/motor_controller_node.cpp)

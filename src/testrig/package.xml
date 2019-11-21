@@ -16,6 +16,8 @@
   <exec_depend>roscpp</exec_depend>
   <exec_depend>std_msgs</exec_depend>
 
+  <depend>joint_state_publisher</depend>
+
   <export>
   </export>
 </package>
