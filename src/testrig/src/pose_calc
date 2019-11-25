@@ -1,0 +1,1 @@
+<node name="pose_calc_node" pkg="testrig" type="pose_calc.py" output="screen" />

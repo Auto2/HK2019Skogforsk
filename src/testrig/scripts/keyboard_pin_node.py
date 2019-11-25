@@ -58,7 +58,7 @@ class KeyboardPinNode:
                 # reformat pin order to the one used by ino
                 self.pins = digs[0]*128 + digs[2]*64 + digs[4]*32 + digs[6]*16 + digs[1]*8 + digs[3]*4 + digs[5]*2 + digs[7]
                 # add 512 -- extra timeout pin
-                self.pins += 512
+                self.pin += 512
 
                 print('Success. Sending value: {0} (= {1} without extra time flag)\n'.format(self.pins, self.pins-512))
                 self.publish()

@@ -3,17 +3,16 @@
 import numpy as np
 import rospy
 from std_msgs.msg import Int64
+from std_msgs.msg import Float64
 from geometry_msgs.msg import Point
 from geometry_msgs.msg import Twist
 
+
 ##-----------------------------DESCRIPTION---------------------------------##
-#Plans action..... 
+#Plans action.....
 #
-#Subscribes to "cmd_goal": this is a point which represents the goal
+#Subscribes to "goal_rig": this is a point which represents the goal in the robot frame
 #[x, y, z] = [x, y, NULL]
-#
-#Subscribes to "pose": this is a Twist message  which represents the pose
-#of the testrig
 #
 #
 #Publishes "motor_action_sw": this message is a number which the motor and
@@ -23,87 +22,108 @@ from geometry_msgs.msg import Twist
 
 ##-----------------------------INIT---------------------------------##
 rospy.init_node('action_decider')
-pubAction = rospy.Publisher('motor_action_sw', Int64, queue_size = 2)
-rate = rospy.Rate(10)
+pubAction = rospy.Publisher('motor_action', Int64, queue_size = 1)
+pubPWM = rospy.Publisher('motor_pwm',Int64,queue_size=1)
+pubReachedGoal = rospy.Publisher('goal_reached',Int64,queue_size=1)
+pub_rig_angle = rospy.Publisher('rig/angle_to_goal',Float64,queue_size=1)
+rate = rospy.Rate(10) #var 10 innan
+rospy.loginfo("Initiated: action_decider_node.py")
 
 goal = Point()#[0, 0] #init goal in origin [x, y]
-goal.x = 0 #x
-goal.y = 0 #y
-
 pose = Twist()
-pose.linear.x = 0 #x
-pose.linear.y = 0 #y
-pose.angular.z = 0 #yaw
+#goal.x = 1
+#goal.y = 0.1
+
+closeEnough = 0.25 #distance from goal when it is deemed that the testrig is close enough to have arrived (meters)
+angleDev = 0.7 #angle deviation to decide when it is time to turn (radians)
 ##-----------------------------INIT---------------------------------##
 
-
-##----------------CONFIGURATION PARAMETERS----------------##
-#all measurements in mm and seen from top plane   
-L = 500 #distance between the two waists
-d_f = 235 #distance between front waist and front wheel axle
-d_m = 285 #distance between front waist and middle wheel axle
-d_r = 235 #distance between front waist and rear wheel axle
-allowedTwist = [0, 45] #maximum twist of waists
-tolerance = 0.01 #percentage based error tolerance for acceptable turn radius
-iterationLimit = 1500 #maximum amount of iterations
-MAX_TURN_RADIUS = 4006 #mm
-MIN_TURN_RADIUS = 500 #mm
-turnRate = 10 #mm/increment
-##--------------------------------------------------------##
-def setGoalCallback(point):
+def get_goal(msg):
     global goal
-    goal = point
+    goal = msg
 
-def setPoseCallback(setPose):
+def get_pose(msg): #get roation of the rig
     global pose
-    pose = setPose
+    pose = msg
+
 
 def calculateAngleAndDistance():
-    global goal, pose
+    global goal
+    global pose
 
-    dx = goal.x - pose.linear.x
-    dy = goal.y - pose.linear.y
-    xr = np.cos(pose.angular.z) * dx + np.sin(pose.angular.z) * dy #x value for goal relative to the robot frame 
-    yr = (-1)*np.sin(pose.angular.z) * dx + np.cos(pose.angular.z) * dy #y value for goal relative to the robot frame 
+    xr = goal.x #x value for goal relative to the robot frame, positive is forward
+    yr = goal.y #y value for goal relative to the robot frame, positive is to the right
 
-    goal_angle = np.arctan2(yr,xr)
+    goal_angle = np.arctan2(yr,xr) #+ pose.angular.z
     distance = np.sqrt(np.square(xr) + np.square(yr))
+    rig_angle = Float64()
+    rig_angle.data = goal_angle
+    pub_rig_angle.publish(rig_angle)
 
     return distance, goal_angle
 
+
 def decideOnAction():
+    global closeEnough
+    global angleDev
+    
+    pwm_msg = Int64()
+    pwm_msg.data = 30
+    pubPWM.publish(pwm_msg)
+    
     distance, angle = calculateAngleAndDistance()
-    if angle <= 0.1 and angle >= -0.1 and distance >= 50: ##if kinda infront and at least 50 mm to the point
+   
+    if angle <= angleDev and angle >= -angleDev and distance >= closeEnough: ##if kinda infront and at least 50 mm to the point
         action = 7
-    elif angle > 0.1 and distance >= 50: ##if to the left and at least 50 mm to the point
+    elif angle > angleDev and distance >= closeEnough: ##if to the left and at least selected distance to the point
         action = 6
-    elif angle < -0.1 and distance >= 50: ##if to the right and at least 50 mm to the point
+    elif angle < -angleDev and distance >= closeEnough: ##if to the right and at least selected distance to the point
         action = 8
     else:
         action = 4 #stand still if no conditions are fulfilled
+
+    	#reachedGoal = Int64()
+    #if distance < closeEnough: #reached current goal
+	#print("Reached goal!")
+	#rospy.sleep(4.0)
+	#reachedGoal.data = 1
+	#pubReachedGoal.publish(reachedGoal)
+    #else:
+    #    reachedGoal.data = 0
+    #    pubReachedGoal.publish(reachedGoal)
 
     return action
 
 
 def doStuff():
-        action = decideOnAction() #
-        action_msg = Int64()
+	action = decideOnAction() #decides what action to take based on where the current goal is relative to the testrig
+	action_msg = Int64()
         action_msg.data = action
-        pubAction.publish(action_msg)
+	pubAction.publish(action_msg) #publish the action
+	reachedGoal = Int64()
+	if action == 4:
+	    rospy.loginfo("Reached checkpoint!")
+	    rospy.sleep(4.0)
+            reachedGoal.data = 1
+	    pubReachedGoal.publish(reachedGoal)
+	else:
+	    reachedGoal.data = 0
+	    pubReachedGoal.publish(reachedGoal)	
 
 
 def main():
+	pwm_msg = Int64()
+	pwm_msg.data = 30
+	pubPWM.publish(pwm_msg)
+	subGoal = rospy.Subscriber('goal_rig', Point, get_goal)
+        sub_pose = rospy.Subscriber('zed/zed_node/pose_twist', Twist, get_pose)
+	while not rospy.is_shutdown():
+		doStuff()
+		rate.sleep()
 
-        subGoal = rospy.Subscriber('cmd_goal', Point, setGoalCallback)
-        subpose = rospy.Subscriber('pose', Twist, setPoseCallback)
-        while not rospy.is_shutdown():
-                doStuff()
-                rate.sleep()
 
 if __name__ == '__main__':
-
     try:
         main()
     except rospy.ROSInterruptException:
         pass
-

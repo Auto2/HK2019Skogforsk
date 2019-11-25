@@ -1,0 +1,56 @@
+<launch>
+	<!-- Transforms --> 
+	<node pkg="tf" type="static_transform_publisher" name="velodyne_link" args="0.271 0.105 1.843 0 0 0 base_link velodyne 10" />
+
+	<node pkg="tf" type="static_transform_publisher" name="zed_link" args="0.059 -0.397 1.951 -1.484 0.332 0 base_link zed 10" />
+
+	<node pkg="topic_tools" type="relay" name="relay_zed" args="/zed/zed_node/point_cloud/cloud_registered /joint_cloud" />
+	<node pkg="topic_tools" type="relay" name="relay_velodyne" args="/velodyne_points /joint_cloud" />
+
+	<!-- Topology --> 
+	  <rosparam command="load" file="$(find grid_map_demos)/config/octomap_to_gridmap_demo.yaml" />
+
+  	<!-- Load the octomap -->
+	<node pkg="octomap_server" type="octomap_server_node" name="octomap_server" output="screen">
+		<param name="resolution" value="0.1" />
+		
+		<!-- fixed map frame (set to 'map' if SLAM or localization running!) -->
+		<param name="frame_id" type="string" value="base_link" />
+
+		<!-- modify latch for performance increase -->
+		<param name="latch" type="bool" value="false" />
+		
+		<!-- maximum range to integrate (speedup!) -->
+		<param name="sensor_model/max_range" value="20.0" />
+				
+		<!-- maximum height to integrate (speedup!) -->
+		<param name="occupancy_min_z" value="0" />
+		<param name="occupancy_max_z" value="2" />
+
+		<!-- data source to integrate (PointCloud2) -->
+		 <remap from="/cloud_in" to="/voxel_grid/output" />
+		<!--<remap from="/cloud_in" to="zed/zed_node/point_cloud/cloud_registered" />-->
+	</node>
+
+  	<!-- Launch the octomap conversion node -->
+  	<node pkg="grid_map_demos" type="octomap_to_gridmap_demo" name="octomap_to_gridmap_demo" output="screen" />
+
+  	<!-- Launch the grid map visualizer -->
+  	<node pkg="grid_map_visualization" type="grid_map_visualization" name="grid_map_visualization" output="screen" />
+	
+	<!-- Launch the octomap reset node
+  	<node pkg="octo_reset" type="octomap_reset_node" name="octomap_reset_node" output="screen" /> KOMMENTERAT BORT RESET NODEN -->
+
+	<node pkg="nodelet" type="nodelet" name="pcl_manager" args="manager" output="screen" />
+	
+	<!-- Run a VoxelGrid filter to clean NaNs and downsample the data -->
+	<node pkg="nodelet" type="nodelet" name="voxel_grid" args="load pcl/VoxelGrid pcl_manager" output="screen">
+	  <remap from="~input" to="/joint_cloud" />
+	    <param name="filter_field_name" value="z" />
+	    <param name="filter_limit_min" value="0" />
+	    <param name="filter_limit_max" value="5" />
+	    <param name="filter_limit_negative" value="False" />
+	    <param name="leaf_size" value="0.25" />
+	</node>
+
+</launch>
