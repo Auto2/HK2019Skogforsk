@@ -171,11 +171,11 @@
 <!-- MODEL IN RVIZ -->
   <!--<param name ="/use_sim_time" value="true"/-->
   <arg name="model" default="$(find testrig)/urdf/rig.urdf.xacro"/>
-  <arg name="use_gui" default="false" />
+  <arg name="use_gui" type="bool" default="false" />
   
   <rosparam file="$(find testrig)/config/joints.yaml" command="load" />
 
- <node name="rig_controller_manager" pkg="controller_manager" type="spawner" respawn="false"    output="screen" args="/joint_state_controller /joint_position_controller /joint_position_controller2"/>
+ <node name="rig_controller_manager" pkg="controller_manager" type="spawner" respawn="false"    output="screen" ns="testrig" args="/joint_state_controller /joint_position_controller /joint_position_controller2"/>
 
   <param name="robot_description" command="$(find xacro)/xacro.py $(arg model)"/>
 
@@ -184,6 +184,7 @@
   <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" respawn="false" output="screen">
     <param name="publish_frequency" type="double" value="50.0" />
     <param name="tf_prefix" value=""/>
+    <remap from="/joint_states" to="/testrig/joint_states" />
   </node>
   
   <node pkg="tf" type="static_transform_publisher" name="map_link" args="0 0 0 -1.57 0 0 map base_link1 10" />

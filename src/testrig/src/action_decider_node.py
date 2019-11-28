@@ -31,11 +31,16 @@ rospy.loginfo("Initiated: action_decider_node.py")
 
 goal = Point()#[0, 0] #init goal in origin [x, y]
 pose = Twist()
+action = 4
+oldAction = 4
 #goal.x = 1
 #goal.y = 0.1
 
-closeEnough = 0.25 #distance from goal when it is deemed that the testrig is close enough to have arrived (meters)
-angleDev = 0.7 #angle deviation to decide when it is time to turn (radians)
+xbox = 0
+
+closeEnough = 0.5 #distance from goal when it is deemed that the testrig is close enough to have arrived (meters)
+angleDev = 0.05 #angle deviation to decide when it is time to turn (radians)
+reverseDist = 2 #minimum distance (backwards or sideways -45 - 45 deg) where testrig starts reversing
 ##-----------------------------INIT---------------------------------##
 
 def get_goal(msg):
@@ -46,6 +51,9 @@ def get_pose(msg): #get roation of the rig
     global pose
     pose = msg
 
+def xboxTakeover(msg):
+    global xbox
+    xbox = msg
 
 def calculateAngleAndDistance():
     global goal
@@ -66,21 +74,25 @@ def calculateAngleAndDistance():
 def decideOnAction():
     global closeEnough
     global angleDev
+    global xbox
     
     pwm_msg = Int64()
     pwm_msg.data = 30
     pubPWM.publish(pwm_msg)
+    action = 4
     
     distance, angle = calculateAngleAndDistance()
-   
-    if angle <= angleDev and angle >= -angleDev and distance >= closeEnough: ##if kinda infront and at least 50 mm to the point
-        action = 7
-    elif angle > angleDev and distance >= closeEnough: ##if to the left and at least selected distance to the point
-        action = 6
-    elif angle < -angleDev and distance >= closeEnough: ##if to the right and at least selected distance to the point
-        action = 8
-    else:
-        action = 4 #stand still if no conditions are fulfilled
+    if (xbox == 0) :
+        if ((angle > 3.1415/4 or angle < -3.1415/4) and distance < reverseDist and distance >= closeEnough): ## if not reached goal and point not within acceptable angles, try backing
+	    action = 1 
+        elif angle <= angleDev and angle >= -angleDev and distance >= closeEnough: ##if kinda infront and at least 'closeEnough' meters to the point
+            action = 7
+        elif angle > angleDev and distance >= closeEnough: ##if to the left and at least selected distance to the point
+            action = 6
+        elif angle < -angleDev and distance >= closeEnough: ##if to the right and at least selected distance to the point
+            action = 8
+        else:
+            action = 4 #stand still if no conditions are fulfilled
 
     	#reachedGoal = Int64()
     #if distance < closeEnough: #reached current goal
@@ -96,14 +108,18 @@ def decideOnAction():
 
 
 def doStuff():
+	global oldAction
+	global action
+	oldAction = action
 	action = decideOnAction() #decides what action to take based on where the current goal is relative to the testrig
-	action_msg = Int64()
-        action_msg.data = action
-	pubAction.publish(action_msg) #publish the action
+	if not oldAction == 4 and not action == 4:
+	    action_msg = Int64()
+            action_msg.data = action
+	    pubAction.publish(action_msg) #publish the action
 	reachedGoal = Int64()
 	if action == 4:
-	    rospy.loginfo("Reached checkpoint!")
-	    rospy.sleep(4.0)
+	    #rospy.loginfo("Reached checkpoint!")
+      	    #rospy.sleep(4.0)
             reachedGoal.data = 1
 	    pubReachedGoal.publish(reachedGoal)
 	else:
@@ -117,6 +133,7 @@ def main():
 	pubPWM.publish(pwm_msg)
 	subGoal = rospy.Subscriber('goal_rig', Point, get_goal)
         sub_pose = rospy.Subscriber('zed/zed_node/pose_twist', Twist, get_pose)
+	sub_xboxTakeover = rospy.Subscriber('xbox_takeover', Int64, xboxTakeover)
 	while not rospy.is_shutdown():
 		doStuff()
 		rate.sleep()

@@ -5,6 +5,17 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   roscpp
   joint_state_publisher
+ 
+  controller_manager
+  gazebo_ros
+  robot_state_publisher
+  roscpp
+  rospy
+  rviz
+  geometry_msgs
+  map_msgs
+  message_filters
+  std_msgs
 )
 
 add_compile_options(-std=c++11)
@@ -12,6 +23,7 @@ add_compile_options(-std=c++11)
 catkin_package(
   INCLUDE_DIRS #include
   CATKIN_DEPENDS roscpp std_msgs
+
 )
 
 include_directories(

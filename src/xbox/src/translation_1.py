@@ -17,6 +17,8 @@ class Interpreter:
         self.pub2 = rospy.Publisher('motor_pwm',Int64,queue_size=1)
 
 	self.pubWaist = rospy.Publisher('cmd_waist_twists',Point,queue_size=1)   
+	self.pubPend = rospy.Publisher('pendulum_action',Int64,queue_size=1)
+	self.pubClearGoal = rospy.Publisher('xbox_takeover',Int64,queue_size=1)
 	#self.actual_angles = rospy.Subscriber('waist_angles',Twist,angleCallback)
 	# ------------------------------------------------------
         #      Init some variables
@@ -25,10 +27,19 @@ class Interpreter:
 
 	self.waist1 = 0
 	self.waist2 = 0
+	
+	self.pendAction = 0
+
+	self.pendSelect = 0
+	self.pendButtonState = 0
 
         self.pwm = 10
         self.action = 4 # 4 is idle
+	self.oldAction = 4
 	self.pwmButtonState = 0
+
+	self.clear = 0
+	self.clearButtonState = 0
 
     def interpret(self,joy):
         # A function that takes in the message from joy
@@ -38,6 +49,9 @@ class Interpreter:
         #pos_val = neg_val * (-1) # ett tal mellan 0 och 2
         #percent = pos_val/2 # ett tal mellan 0 och 1
         #p = 10 + percent*80
+	self.oldAction = self.action
+	
+	# ---------- PWM --------------------------------------
 	if joy.buttons[0] == 1 and self.pwm < 90 and self.pwmButtonState == 0:
 	    self.pwm = self.pwm + 10
 	    self.publish_pwm()
@@ -50,15 +64,8 @@ class Interpreter:
 	    self.pwmButtonState = 0
 	
         # -----------------------------------------------------
-        #  transform PWM
-
-        #p = p/10
-        #p = round(p)
-        #self.pwm = p*10
-
-        # -----------------------------------------------------
-        # Interpret motor action Left/right
-        # Left = 1
+	
+	# ----------- TURN BOTH WAISTS ------------------------
         crossLR = joy.axes[0]
         crossUD = joy.axes[1]
 	
@@ -71,15 +78,6 @@ class Interpreter:
 		self.waist2 = 0
 	    self.publishWaist() 
 
-        #if crossLR < -0.1:
-        #    self.x = self.x  1
-        #elif crossLR > 0.1:
-        #    self.x = -1
-        #else :
-        #    self.x = 0
-        # -----------------------------------------------------
-        # Interpret motor action up/down
-        # Upp = 1
         if crossUD < -0.1:
             #self.y = -1
 	    self.action = 1
@@ -90,8 +88,85 @@ class Interpreter:
             #self.y = 0
 	    self.action = 4        
 	# -----------------------------------------------------
+
+	# ----------- TURN FRONT WAIST ------------------------
+	frontLR = joy.axes[6]	# D-pad left/right
+	
+	if (abs(frontLR) > 0.1) :
+	    if (frontLR > 0.1) :
+	        self.waist1 = self.waist1 - 5
+	    elif (frontLR < -0.1) :
+	        self.waist1 = self.waist1 + 5
+	    self.publishWaist()
+	
+	# -----------------------------------------------------
+	
+	# ---------- TURN BACK WAIST --------------------------
+	backLR = joy.axes[7]	# D-pad up/down
+
+	if (abs(backLR) > 0.1) :
+	    if (backLR > 0.1) :
+	        self.waist2 = self.waist2 - 5
+	    elif (backLR < -0.1) :
+	        self.waist2 = self.waist2 + 5
+	    self.publishWaist()
+	
+	# ------------ RESET WAISTS --------------------------
+	startBtn = joy.buttons[7]
+	if (startBtn == 1):
+	    self.waist1 = 0
+	    self.waist2 = 0
+	    self.publishWaist()
+
+	# -----------------------------------------------------
+	# ---------- PENDULUM ARM CONTROL - in pairs ----------
+	Ybtn = joy.buttons[3]
+	#LT = joy.axes[5]
+	LB = joy.buttons[4]
+	#RT = joy.axes[4]
+	RB = joy.buttons[5]
+	
+	self.pendAction = 0
+		
+	# Choose pendulum arm (1-6)
+	if (Ybtn == 1 and self.pendButtonState == 0) :
+	    self.pendSelect += 1
+	    self.pendButtonState = 1
+	    self.pendAction = (self.pendSelect % 6) + 1
+	    self.publishPend()
+	elif (Ybtn == 0) :
+	    self.pendButtonState = 0
+	
+	# up/down
+	if (LB == 1 or RB == 1) :
+	    if (LB == 1) :
+	        self.pendAction = 8
+		self.publishPend()
+	    elif (RB == 1) :
+	        self.pendAction = 9
+		self.publishPend()
+	#elif (LB == 0 and RB == 0 and not self.pendAction == 0) :
+	#    self.pendAction = 0
+	#    self.publishPend()
+	self.publishPend()
+	
+	# -----------------------------------------------------
+
+	# ---------- CLEAR GOAL LIST --------------------------
+	Xbtn = joy.buttons[2]
+	if (Xbtn == 1 and self.clearButtonState == 0):
+	    self.clearButtonState = 1
+	    if (self.clear == 0) :
+		self.clear = 1
+	    else :
+		self.clear = 0
+	    self.publishClear()
+	else :
+	    self.clearButtonState = 0
+	    
+	
+	# -----------------------------------------------------
         # Calculate motor action and publish
-        #self.action_recalc()
         self.publish()
 
     def action_recalc(self):
@@ -107,12 +182,13 @@ class Interpreter:
 	    self.action = 4
 
     def publish(self):
-        # action_msg is of type Int64
-        action_msg = Int64()
-        # pack action
-        action_msg.data = self.action
-        # pub
-        self.pub1.publish(action_msg)
+	if not self.action == 4 and not self.oldAction == 4 :        
+	    # action_msg is of type Int64
+            action_msg = Int64()
+            # pack action
+            action_msg.data = self.action
+            # pub
+            self.pub1.publish(action_msg)
     
     def publishWaist(self):	
 	waist_msg = Point()
@@ -120,11 +196,20 @@ class Interpreter:
 	waist_msg.y = self.waist2
 	self.pubWaist.publish(waist_msg)
 
+    def publishPend(self):
+	pend_msg = Int64()
+	pend_msg = self.pendAction
+	self.pubPend.publish(pend_msg)
+
     def publish_pwm(self):
 	pwm_msg = Int64()
 	pwm_msg.data = self.pwm
 	self.pub2.publish(pwm_msg)
 
+    def publishClear(self):
+	clear_msg = Int64()
+	clear_msg.data = self.clear
+	self.pubClearGoal.publish(clear_msg)
 
 def listener():
     rospy.init_node('interpreter_node',anonymous = True)

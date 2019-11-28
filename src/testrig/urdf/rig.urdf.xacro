@@ -1,10 +1,13 @@
 <?xml version="1.0" ?>
 <robot name="testrig" xmlns:xacro="http://ros.org/wiki/xacro">
   <xacro:include filename="$(find testrig)/urdf/common_properties.xacro"/>
-  <!-- <xacro:include filename="$(find hktest)/urdf/rig.gazebo.xacro"/> 
-  <xacro:include filename="$(find hktest)/urdf/rig.transmission.xacro"/> -->
+  <xacro:include filename="$(find testrig)/urdf/rig.gazebo.xacro"/> 
+  <xacro:include filename="$(find testrig)/urdf/rig.transmission.xacro"/>
+  <xacro:include filename="$(find velodyne_description)/urdf/VLP-16.urdf.xacro"/>
+
   <xacro:property name="z" value="0.360"/>
   <!-- LIDAR -->
+ 
   <xacro:arg name="gpu" default="false"/>
   <xacro:property name="gpu" value="$(arg gpu)" />
   <!-- CAMERA -->
@@ -47,7 +50,12 @@
       </inertial>
   </link>
   
+
   <!-- LIDAR, CAMERA, IMU -->
+
+  <VLP-16 parent="base_link1" name="velodyne">
+    <origin xyz="0 0.13 0.75" rpy="0 0 0" />
+  </VLP-16>
 
   <joint name="camera_joint" type="fixed">
     <axis xyz="0 1 0" />
@@ -143,7 +151,7 @@
   <joint name="front_joint_middle" type="revolute">
     <parent link="base_link1"/>
     <child link="front_link_middle"/>
-    <limit effort="1000" lower="-0.7" upper="0.7" velocity="0.5" />
+    <limit effort="1000" lower="-0.75" upper="0.75" velocity="0.5" />
     <origin xyz="0.0 -0.070 ${z-0.035}" rpy="1.57 0 0"/>
     <axis xyz="0 1 0"/> 
   </joint>
@@ -271,7 +279,7 @@
   <joint name="middle_joint_back" type="revolute">
     <parent link="middle_base" />
     <child link = "middle_link_back" />
-    <limit effort="1000" lower="-0.7" upper="0.7" velocity="0.5" />
+    <limit effort="1000" lower="-0.75" upper="0.75" velocity="0.5" />
     <origin xyz="0 -0.520 0" rpy="0 0 1.57" /> 
     <axis xyz="0 1 0"/> 
   </joint>
@@ -393,10 +401,10 @@
       </inertial>
   </link>
   
-  <!-- <gazebo>
+  <gazebo>
 	<plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
     </plugin>
-  </gazebo> -->
+  </gazebo>
 
 </robot>
 

@@ -2,7 +2,7 @@
 
 import numpy as np
 import rospy
-from std_msgs.msg import Int64 #used to import desired turn radius value
+from std_msgs.msg import Int64, Float64 #used to import desired turn radius value
 from geometry_msgs.msg import Point #x, y used for front and rear waist angle (float 64) respectibely
 
 ##-----------------------------DESCRIPTION---------------------------------##
@@ -39,6 +39,8 @@ rospy.init_node('desired_turn_radius_to_waist_angles')
 pubDesRad = rospy.Publisher('desired_radius', Int64, queue_size = 2)
 pubAngles = rospy.Publisher('cmd_waist_twists', Point, queue_size = 1)
 pubRad = rospy.Publisher('actual_radius', Int64, queue_size = 1)
+pubRvisFront = rospy.Publisher('/joint_position_controller/command', Float64, queue_size = 1)
+pubRvisRear = rospy.Publisher('/joint_position_controller2/command', Float64, queue_size = 1)
 rate = rospy.Rate(20)
 ##-----------------------------INIT---------------------------------##
 
@@ -202,7 +204,11 @@ def angleFeedbackCallback(angles):
     R_real = (Ra + Rb) / 2
 
     pubRad.publish(R_real) #publish the calculated turn radius from the measured waist angles
-
+    
+    frontangleRad = a*np.pi/180.0 
+    rearangleRad = b*np.pi/180.0
+    pubRvisFront.publish(frontangleRad)
+    pubRvisRear.publish(rearangleRad)
 #def incrementAnglesCallback(action):
     #global a
     #global b
@@ -231,6 +237,9 @@ def doStuff():
 	angles_msg.y = rearAngle
 	angles_msg.z = R_des
 	pubAngles.publish(angles_msg)
+
+   
+
 
 
 def main():
