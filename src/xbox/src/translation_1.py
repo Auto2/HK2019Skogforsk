@@ -18,7 +18,8 @@ class Interpreter:
 
 	self.pubWaist = rospy.Publisher('cmd_waist_twists',Point,queue_size=1)   
 	self.pubPend = rospy.Publisher('pendulum_action',Int64,queue_size=1)
-	self.pubClearGoal = rospy.Publisher('xbox_takeover',Int64,queue_size=1)
+	self.pubTakeoverGoal = rospy.Publisher('xbox_takeover',Int64,queue_size=1)
+	
 	#self.actual_angles = rospy.Subscriber('waist_angles',Twist,angleCallback)
 	# ------------------------------------------------------
         #      Init some variables
@@ -38,8 +39,8 @@ class Interpreter:
 	self.oldAction = 4
 	self.pwmButtonState = 0
 
-	self.clear = 0
-	self.clearButtonState = 0
+	self.takeover = 0
+	self.takeoverButtonState = 0
 
     def interpret(self,joy):
         # A function that takes in the message from joy
@@ -152,17 +153,17 @@ class Interpreter:
 	
 	# -----------------------------------------------------
 
-	# ---------- CLEAR GOAL LIST --------------------------
+	# ---------- XBOX TAKEOVER --------------------------
 	Xbtn = joy.buttons[2]
-	if (Xbtn == 1 and self.clearButtonState == 0):
-	    self.clearButtonState = 1
-	    if (self.clear == 0) :
-		self.clear = 1
+	if (Xbtn == 1 and self.takeoverButtonState == 0):
+	    self.takeoverButtonState = 1
+	    if (self.takeover == 0) :
+		self.takeover = 1
 	    else :
-		self.clear = 0
-	    self.publishClear()
+		self.takeover = 0
+	    self.publishTakeover()
 	else :
-	    self.clearButtonState = 0
+	    self.takeoverButtonState = 0
 	    
 	
 	# -----------------------------------------------------
@@ -188,34 +189,40 @@ class Interpreter:
             # pack action
             action_msg.data = self.action
             # pub
-            self.pub1.publish(action_msg)
+	    if self.takeover == 1:
+                self.pub1.publish(action_msg)
     
     def publishWaist(self):	
 	waist_msg = Point()
 	waist_msg.x = self.waist1
 	waist_msg.y = self.waist2
-	self.pubWaist.publish(waist_msg)
+	if self.takeover == 1:
+	    self.pubWaist.publish(waist_msg)
 
     def publishPend(self):
 	pend_msg = Int64()
 	pend_msg = self.pendAction
-	self.pubPend.publish(pend_msg)
+	if self.takeover == 1:
+	    self.pubPend.publish(pend_msg)
 
     def publish_pwm(self):
 	pwm_msg = Int64()
 	pwm_msg.data = self.pwm
-	self.pub2.publish(pwm_msg)
+	if self.takeover == 1:
+	    self.pub2.publish(pwm_msg)
 
-    def publishClear(self):
-	clear_msg = Int64()
-	clear_msg.data = self.clear
-	self.pubClearGoal.publish(clear_msg)
+    def publishTakeover(self):
+	takeover_msg = Int64()
+	takeover_msg.data = self.takeover
+	if self.takeover == 1:
+	    self.pubTakeoverGoal.publish(takeover_msg)
 
 def listener():
     rospy.init_node('interpreter_node',anonymous = True)
     tolk = Interpreter()
     sub1 = rospy.Subscriber('joy',Joy,tolk.interpret)
     rate = rospy.Rate(10) #10Hz
+    
     while not rospy.is_shutdown():
 	tolk.publish()
 	rate.sleep()

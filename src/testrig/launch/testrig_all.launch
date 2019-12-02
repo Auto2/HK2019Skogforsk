@@ -15,6 +15,7 @@
   <node name="coordinate_list" pkg="testrig" type="coordinate_list.py" output="screen" />
 
  <node name="astar_node" pkg="testrig" type="astar.py" output="screen" />
+ <!-- <node name="global_path_node" pkg="testrig" type="global_path.py" output="screen" /> -->
 
   <node name="arduino_motor_node" pkg="rosserial_python" type="serial_node.py" output="screen">
 	<param name="port" value="/dev/ttyACM0" />
@@ -115,6 +116,11 @@
 
 <!-- MAPPING CODE -->
 	<!-- Transforms --> 
+
+	<node pkg="tf" type="static_transform_publisher" name="map_odom_link" args="0 0 0 0 0 0 map odom 10" />
+	
+	<node pkg="tf" type="static_transform_publisher" name="baselinks_link" args="0 0 0 -1.57 0 0 base_link base_footprint 10" />
+
 	<node pkg="tf" type="static_transform_publisher" name="velodyne_link" args="0 0.13 0.75 1.57 0 0 base_link1 velodyne 10" />
 
 	<node pkg="tf" type="static_transform_publisher" name="zed_link" args="0 0.44 0.65 0 0 0 base_link1 zed 10" />
@@ -122,11 +128,11 @@
 	<node pkg="topic_tools" type="relay" name="relay_zed" args="/zed/zed_node/point_cloud/cloud_registered /joint_cloud" />
 	<node pkg="topic_tools" type="relay" name="relay_velodyne" args="/velodyne_points /joint_cloud" />
 	<!-- Topology --> 
-	  <!-- <rosparam command="load" file="$(find grid_map_demos)/config/octomap_to_gridmap_demo.yaml" /> -->
+	   <!-- <rosparam command="load" file="$(find grid_map_demos)/config/octomap_to_gridmap_demo.yaml" /> -->
 
   	<!-- Load the octomap -->
 	<node pkg="octomap_server" type="octomap_server_node" name="octomap_server" output="screen">
-		<param name="resolution" value="0.3" />
+		<param name="resolution" value="0.4" />
 		
 		<!-- fixed map frame (set to 'map' if SLAM or localization running!) -->
 		<param name="frame_id" type="string" value="map" />
@@ -139,7 +145,7 @@
 				
 		<!-- maximum height to integrate (speedup!) -->
 		<param name="occupancy_min_z" value="0" />
-		<param name="occupancy_max_z" value="2" />
+		<param name="occupancy_max_z" value="0" />
 
 		<!-- data source to integrate (PointCloud2) -->
 		<!-- <remap from="/cloud_in" to="/voxel_grid/output" /> STOG voxel_grid HÄR-->
@@ -150,10 +156,10 @@
 	</node>
 
   	<!-- Launch the octomap conversion node -->
-  	<!-- <node pkg="grid_map_demos" type="octomap_to_gridmap_demo" name="octomap_to_gridmap_demo" output="screen" /> -->
+  	 <!-- <node pkg="grid_map_demos" type="octomap_to_gridmap_demo" name="octomap_to_gridmap_demo" output="screen" />  -->
 
   	<!-- Launch the grid map visualizer -->
-  	<node pkg="grid_map_visualization" type="grid_map_visualization" name="grid_map_visualization" output="screen" />
+  	<!-- <node pkg="grid_map_visualization" type="grid_map_visualization" name="grid_map_visualization" output="screen" /> -->
 	
 	<!-- Launch the octomap reset node 
   	<node pkg="octo_reset" type="octomap_reset_node" name="octomap_reset_node" output="screen" /> -->
@@ -190,7 +196,6 @@
     <param name="tf_prefix" value=""/>
   </node>
   
-  <node pkg="tf" type="static_transform_publisher" name="map_link" args="0 0 0 -1.57 0 0 map base_link1 10" />
-  <node pkg="tf" type="static_transform_publisher" name="map_base_footprint" args="0 0 0 0 0 0 map base_footprint 10" />
+
 
 </launch>

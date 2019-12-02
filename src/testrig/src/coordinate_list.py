@@ -4,7 +4,7 @@ import rospy
 from geometry_msgs.msg import Point
 from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import Path
-from std_msgs.msg import Int64
+from std_msgs.msg import Int64, Int8
 
 
 
@@ -28,6 +28,8 @@ def convertList(theList):
 
 def nextGoal(msg):
 	global pointList
+
+
 	if (len(pointList) > 0) and (msg.data == 1):
 		nextPoint = pointList.pop(0)
 		print("Next target: ")
@@ -35,18 +37,19 @@ def nextGoal(msg):
 		print(nextPoint.y)
 		pubNextPoint.publish(nextPoint)
 
+
 def addGoal(msg):
 	global pointList
 	
-	#print(msg)
-	#iterate_path = Point()
 	for iterate_point in msg.poses:
 	    tmpPoint = Point()
 	    tmpPoint.x = iterate_point.pose.position.x
 	    tmpPoint.y = iterate_point.pose.position.y
 	    tmpPoint.z = 0
 	    pointList.append(tmpPoint)
-	#pointList.reverse()
+	
+	
+	
 
 def main():
 	global pointList
@@ -60,7 +63,8 @@ def main():
 	#pointList = convertList(Coordinate_list)
 	subMotorAction = rospy.Subscriber('goal_reached', Int64, nextGoal)
 	subRvizGoal = rospy.Subscriber('Astar_path', Path, addGoal)
-	while not rospy.is_shutdown():
+
+	while not rospy.is_shutdown():		
 		rate.sleep()
 
 if __name__ == '__main__':

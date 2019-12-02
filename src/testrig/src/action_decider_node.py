@@ -32,7 +32,7 @@ rospy.loginfo("Initiated: action_decider_node.py")
 goal = Point()#[0, 0] #init goal in origin [x, y]
 pose = Twist()
 action = 4
-oldAction = 4
+oldAction = 0
 #goal.x = 1
 #goal.y = 0.1
 
@@ -40,7 +40,7 @@ xbox = 0
 
 closeEnough = 0.5 #distance from goal when it is deemed that the testrig is close enough to have arrived (meters)
 angleDev = 0.05 #angle deviation to decide when it is time to turn (radians)
-reverseDist = 2 #minimum distance (backwards or sideways -45 - 45 deg) where testrig starts reversing
+reverseDist = 0.5 #minimum distance (backwards or sideways -45 - 45 deg) where testrig starts reversing
 ##-----------------------------INIT---------------------------------##
 
 def get_goal(msg):
@@ -76,14 +76,15 @@ def decideOnAction():
     global angleDev
     global xbox
     
-    pwm_msg = Int64()
-    pwm_msg.data = 30
-    pubPWM.publish(pwm_msg)
+    if (xbox == 0):
+        pwm_msg = Int64()
+        pwm_msg.data = 30
+        pubPWM.publish(pwm_msg)
     action = 4
     
     distance, angle = calculateAngleAndDistance()
     if (xbox == 0) :
-        if ((angle > 3.1415/4 or angle < -3.1415/4) and distance < reverseDist and distance >= closeEnough): ## if not reached goal and point not within acceptable angles, try backing
+        if ((angle > 3 or angle < -3) and distance < reverseDist and distance >= closeEnough): ## if not reached goal and point not within acceptable angles, try backing
 	    action = 1 
         elif angle <= angleDev and angle >= -angleDev and distance >= closeEnough: ##if kinda infront and at least 'closeEnough' meters to the point
             action = 7
@@ -112,6 +113,17 @@ def doStuff():
 	global action
 	oldAction = action
 	action = decideOnAction() #decides what action to take based on where the current goal is relative to the testrig
+	#if not oldAction == 4 and action == 4:
+	#    action_msg = Int64()
+        #    action_msg.data = action
+	#    pubAction.publish(action_msg) #publish the action
+	#    reachedGoal = Int64()
+	#    reachedGoal.data = 1
+	#    pubReachedGoal.publish(reachedGoal)
+	#elif not action == 4:
+	#    action_msg = Int64()
+        #    action_msg.data = action
+	#    pubAction.publish(action_msg) #publish the action
 	if not oldAction == 4 and not action == 4:
 	    action_msg = Int64()
             action_msg.data = action
@@ -125,7 +137,7 @@ def doStuff():
 	else:
 	    reachedGoal.data = 0
 	    pubReachedGoal.publish(reachedGoal)	
-
+	
 
 def main():
 	pwm_msg = Int64()
@@ -134,6 +146,9 @@ def main():
 	subGoal = rospy.Subscriber('goal_rig', Point, get_goal)
         sub_pose = rospy.Subscriber('zed/zed_node/pose_twist', Twist, get_pose)
 	sub_xboxTakeover = rospy.Subscriber('xbox_takeover', Int64, xboxTakeover)
+	reachedGoal = Int64()
+	reachedGoal.data = 1
+	pubReachedGoal.publish(reachedGoal)
 	while not rospy.is_shutdown():
 		doStuff()
 		rate.sleep()

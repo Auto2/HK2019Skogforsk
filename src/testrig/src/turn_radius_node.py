@@ -58,12 +58,18 @@ MAX_TURN_RADIUS = 100000 #mm
 MIN_TURN_RADIUS = 600 #mm
 R_des = MAX_TURN_RADIUS #desired turn radius from center of body along middle wheel axle (mm)
 
+xbox = 0
+
 #waist angles
 #a = 0
 #b = 0
 
 turnRate = 200 #mm/increment
 ##--------------------------------------------------------##
+
+def xboxTakeover(msg):
+    global xbox
+    xbox = msg
 
 
 #calculate the turn radius based on waist twist and distance between the waist and motor axes in the top plane
@@ -236,7 +242,8 @@ def doStuff():
 	angles_msg.x = frontAngle
 	angles_msg.y = rearAngle
 	angles_msg.z = R_des
-	pubAngles.publish(angles_msg)
+	if (xbox == 0):
+	    pubAngles.publish(angles_msg)
 
    
 
@@ -248,6 +255,7 @@ def main():
 	subDeltaRadius = rospy.Subscriber('motor_action', Int64, incrementDesiredRadiusCallback)
 	#subMotorAction = rospy.Subscriber('motor_action', Int64, incrementAnglesCallback)
         subActualWaistAngles = rospy.Subscriber('waist_angles', Point, angleFeedbackCallback)
+	sub_xboxTakeover = rospy.Subscriber('xbox_takeover', Int64, xboxTakeover)
 	while not rospy.is_shutdown():
 		doStuff()
 		#rate.sleep()

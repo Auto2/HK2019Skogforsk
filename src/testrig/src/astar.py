@@ -7,7 +7,8 @@ from visualization_msgs.msg import MarkerArray
 from geometry_msgs.msg import Point
 from nav_msgs.msg import Path
 from std_msgs.msg import Int8
-from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import PoseStamped, Twist
+from tf.transformations import euler_from_quaternion
 
 ##-----------------------------DESCRIPTION---------------------------------##
 #
@@ -29,18 +30,71 @@ rate = rospy.Rate(10)
 Q=[]
 black_list=[]
 the_path = Path()
+globalGoalList = []
+
 the_path.header.frame_id = 'map'
-goal = Point()
+goal = Twist()
+pathGoal = Twist()
+
 #goal.x = -8
 #goal.y = -5
-currentX = 0
-currentY = 0
-currentZ = 0
+
+currentPosition = Twist()
+#currentTheta = 0
 max_obstacle_height = 20
 min_obstacle_height = 0.1
-min_obstacle_distance = 0.25
-i = 0
+min_obstacle_distance = 0.5
+#i = 0
+initialPoint = 1
 ##-----------------------------INIT---------------------------------##
+
+
+
+##--------------------------Global Path--------------------------##
+def addGoal(msg):
+	global globalGoalList
+	global initialPoint
+	globalGoalList.append(msg)
+	#tmpGoal = globalGoalList.pop(0)
+	#pubGlobalPathNext.publish(tmpGoal)
+	#if (len(globalGoalList) == 1) and (initialPoint == 1):#publish immediately if it's the initial point	
+	#	initialPoint = 0
+	#	tmpGoal = globalGoalList.pop(0)
+	#	RvizCallback(tmpGoal)
+	#else:
+	#	tmpGoal = globalGoalList.pop(0)
+	#	RvizCallback(tmpGoal)
+	#tmpGoal = globalGoalList.pop(0)
+	#RvizCallback(tmpGoal)
+		
+
+def sendGoalToAstar():
+	global globalGoalList
+	if len(globalGoalList) > 0:
+		nextGoal = globalGoalList.pop(0)
+		RvizCallback(nextGoal)
+
+def poseCloseEnoughToPathGoal(): #returns true if close enough to the goal
+	global pathGoal
+	global currentPosition
+	
+	distance = np.sqrt(np.power(currentPosition.linear.x - pathGoal.linear.x,2)+np.power(currentPosition.linear.y - pathGoal.linear.y,2))
+	
+	#print('DISTANCE _______________________________')
+	#print(distance)
+	#print('------------------------------------------------')
+	
+	#angle = abs(currentPosition.z - pathGoal.angular.z)
+	#print(distance)
+	if (distance < 0.5): #and (angle < 0.6):
+		#print('FAKKING CLAS ENAFF--------------------------')
+		return True
+	else:
+		return False
+
+
+##--------------------------Global Path--------------------------##
+
 
 class Node:
 	def __init__(self,x=0,y=0,z=0,theta=0,parent=None,heuristic=5,cost_to_come=0.1):
@@ -56,11 +110,13 @@ class Node:
 
 	def update_cost(self):
 		self.cost = self.heuristic + self.cost_to_come
+#start = Node()
 
 def update_marker(msg):
 	global marker_array
 	marker_array = msg
 	update_obstacle_list()
+	print(len(obstacle_list))
 
 def getCostFromParents(node):
 	cost = np.sqrt(np.power(node.parent.x - node.x,2) + np.power(node.parent.y - node.y,2))
@@ -70,28 +126,61 @@ def getCostFromParents(node):
 	return cost
 
 def getPosition(msg):
-	global currentX
-	global currentY
-	currentX = msg.pose.position.x
-	currentY = msg.pose.position.y
+	#global currentX
+	#global currentY
+	#global currentTheta
+	global currentPosition
+	currentPosition.linear.x = msg.pose.position.x
+	currentPosition.linear.y = msg.pose.position.y
+	orientation_q = msg.pose.orientation #orientation expressed in quaternions
+	orientation_q_list = [orientation_q.x, orientation_q.y, orientation_q.z, orientation_q.w] #store the quaternions in an array
+
+	(roll, pitch, yaw) = euler_from_quaternion(orientation_q_list) #translates from quaternion to euler angles
+	currentPosition.angular.z = yaw
+	#print(currentPosition)
 
 def RvizCallback(msg):
 	global goal
-	goal.x = msg.pose.position.x
-	goal.y = msg.pose.position.y
-	goal.z = 0
-	A_star()
+
+	orientation_q = msg.pose.orientation #orientation expressed in quaternions
+	orientation_q_list = [orientation_q.x, orientation_q.y, orientation_q.z, orientation_q.w] #store the quaternions in an array
+
+	(roll, pitch, yaw) = euler_from_quaternion(orientation_q_list) #translates from quaternion to euler angles
+	#"forward" is the x direction so negative yaw means a clockwise rotation
+	#return/publish the pose expressed as Twist
+	#goal = Twist()
+
+	goal.linear.x = msg.pose.position.x
+	goal.linear.y = msg.pose.position.y
+	goal.linear.z = 0#msg.pose.position.z
+
+	goal.angular.x = roll
+	goal.angular.y = pitch
+	goal.angular.z = yaw
 	clearAll()
+	A_star()
+	
 
 def clearAll():
 	global Q
+	global the_path
+	the_path = Path()
+	the_path.header.frame_id = 'map'
+
+	global currentPosition
 	Q = []
-	origin = Node(currentX,currentY)
+	#start.parent = None
+	#start.heuristic = 5
+	#start.cost_to_come = 0.1
+	origin = Node(currentPosition.linear.x, currentPosition.linear.y, currentPosition.linear.z, currentPosition.angular.z) #start
+	print("CLEAAAAAAAAAAARING ALLLLLLLLLLLLLLLLLLLLLLLL ")
+	print(the_path)
+	print("APPEND ORIGIN")
 	Q.append(origin)
 	
 def calculate_heuristic(x,y):
 	global goal
-	return np.sqrt(np.power(goal.x-x,2)+np.power(goal.y-y,2))
+	return np.sqrt(np.power(goal.linear.x-x,2)+np.power(goal.linear.y-y,2))
 
 def update_obstacle_list():
 	global marker_array
@@ -100,6 +189,7 @@ def update_obstacle_list():
 	for point in marker_array.markers[16].points:
 		#print(point.points[0])
 		obstacle_list.append(point)
+	print(len(obstacle_list))
 		
 def generate_nodes(parent):
 	
@@ -107,7 +197,7 @@ def generate_nodes(parent):
 	global Q
 	global i
 	black_list.append(parent) #To remember which nodes have been evaluated
-	L = [-0.5, -0.25 ,0, 0.25, 0.5]#vinklar 
+	L = [-0.3, -0.15 ,0, 0.15, 0.3]#vinklar 
 	step = 0.25
 	for angle in L:
 		x_temp = np.cos(parent.theta + angle)*step
@@ -117,6 +207,7 @@ def generate_nodes(parent):
 		thetan = parent.theta+angle
 		#if child is suitable to be created (not already visited, not in obstacle etc)
 		if is_node_ok(xn, yn, thetan):
+			#print("node is ok")
 			child = Node(xn,yn,0,thetan,parent)
 			child.heuristic = calculate_heuristic(xn,yn)
 			#child.cost_to_come = getCostFromParents(child)
@@ -124,6 +215,7 @@ def generate_nodes(parent):
 			#print("New node appended")
 			Q.append(child)
 		else:
+			print("node NOT okay")
 			pass
 
 def node_is_in_blacklist(x,y,theta):
@@ -131,16 +223,16 @@ def node_is_in_blacklist(x,y,theta):
 	for node in black_list:
 		distance = np.sqrt(np.square(x - node.x)+np.square(y - node.y))
 		angle = abs(theta - node.theta)
-		if (distance < 0.05) and (angle < 0.1): #5cm and 0.1rad		
+		if (distance < 0.08): #and (angle < 0.1): #5cm and 0.1rad		
 			return True
 	return False
 
 def get_path(node):
-
 	if not node.parent == None:
 		get_path(node.parent)
 	
 	global the_path
+	
 	pose = PoseStamped()
 	pose.pose.position.x = node.x
 	pose.pose.position.y = node.y
@@ -155,6 +247,7 @@ def notTooCloseToObstacle(obstacle_list, x, y):
 	for obstacle in obstacle_list:
 		if (obstacle.z > min_obstacle_height) and (obstacle.z < max_obstacle_height):
 			distance = np.sqrt(np.square(x - obstacle.x)+np.square(y - obstacle.y))
+			
 			if distance < min_obstacle_distance:			
 				return False
 	return True	
@@ -168,8 +261,6 @@ def is_node_ok(x, y, theta): #checks if node is suitable to be created
 
 	#May be consider orientation
 	return notTooCloseToObstacle(obstacle_list, x, y)
-
-
 
 
 def getBestNode():
@@ -186,9 +277,11 @@ def getBestNode():
 
 def closeEnoughTogoal(node): #returns true if close enough to the goal
 	global goal
-	distance = np.sqrt(np.power(node.x - goal.x,2)+np.power(node.y - goal.y,2))
+	distance = np.sqrt(np.power(node.x - goal.linear.x,2)+np.power(node.y - goal.linear.y,2))
+	angle = abs(node.theta - goal.angular.z)
 	#print(distance)
-	if distance < 0.3:
+	if (distance < 0.3) and (angle < 0.6):
+		print('Close enough')
 		return True
 	else:
 		return False
@@ -201,57 +294,57 @@ def A_star():
 	global the_path
 	global pub_path
 	global path_is_ok
-	global i
+	i = 0
 	global obstacle_list
+	#global start
+	global pathGoal
 	while Q:
 		#get bestnode
 		bestNode = getBestNode()
-		if i < 250:
+		if i < 80:
 			i = i + 1
-			print("Iteration: " + str(i))
-			print("Obstacle list size: " + str(len(obstacle_list)))
+			#print("Iteration: " + str(i))
+			#print("Obstacle list size: " + str(len(obstacle_list)))
 			#print("Node coordinates (x,y,theta): ")
 			#print(bestNode.representation)
-		#check if goal
+			#check if goal
+			
 			if closeEnoughTogoal(bestNode):
 				#return success and the path
 				print('Close to goal')
-				path_ok_value = 1
-				path_ok.data = path_ok_value
-				path_is_ok.publish(path_ok)
+				#path_ok_value = 1
+				#path_ok.data = path_ok_value
+				#path_is_ok.publish(path_ok)
 				get_path(bestNode)
+				pathGoal.linear.x = bestNode.x
+				pathGoal.linear.y = bestNode.y
 				pub_path.publish(the_path)
-				#print(bestNode.representation)
-				#print(the_path)
-				#rospy.signal_shutdown('done')
 				break
 			else:
-				#print('Not close enough to goal')
-				#keep searching
-				#path_ok = 0
-				#path_is_ok.publish(path_ok)
 				generate_nodes(bestNode)
 		else:
-			print('Non-optimal path')
+			#print('Non-optimal path')
 			get_path(bestNode)
+			pathGoal.linear.x = bestNode.x
+			pathGoal.linear.y = bestNode.y
 			pub_path.publish(the_path)
+			
 			break
 
 def main():
 	global black_list
 	global Q
 	global obstacle_list
+
 	sub_markerArray_map = rospy.Subscriber('occupied_cells_vis_array', MarkerArray, update_marker) #subscribes to the marker array which contains detected physical points in space
 	origin = Node()
 	Q.append(origin)
-	subRvizGoal = rospy.Subscriber('/move_base_simple/goal', PoseStamped, RvizCallback)
+	subRvizGoal = rospy.Subscriber('next_goal_global_path', PoseStamped, RvizCallback)
+	subRvizGoal = rospy.Subscriber('/move_base_simple/goal', PoseStamped, addGoal)
 	subPose = rospy.Subscriber('/zed/zed_node/pose', PoseStamped, getPosition)
-
 	while not rospy.is_shutdown():
-		#main function here
-		#print(len(obstacle_list))
-		#if not len(obstacle_list)==0:
-			#A_star()
+		if poseCloseEnoughToPathGoal() == True: #sends next goal to Astar if close enough to path goal
+			sendGoalToAstar()
 		rate.sleep()
 		#show_occupied_points()
 
