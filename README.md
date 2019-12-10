@@ -54,6 +54,11 @@ Only sensors:
 Only xbox-controller:
 **demo_xbox.launch**
 
+3. **Optional:** Start rviz
+'''bash
+rviz
+''' 
+
 
 ## How to work with branches
 1. If you are not up to date with master you can start with:
