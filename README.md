@@ -10,7 +10,48 @@ git clone https://github.com/Auto2/HK2019Skogforsk.git
 ```bash
 catkin_make
 ```
-4. Now it's set up!
+4. Add ROS environmental variables (still inside the HK2019Skogforsk folder)
+```bash
+echo "source $PWD/devel/setup.bash" >> ~/.bashrc
+```
+```bash
+echo "export ROS_IP=192.168.1.238" >> ~/.bashrc
+```
+```bash
+echo "export ROS_MASTER_URI=http://192.168.1.238:11311" >> ~/.bashrc
+```
+
+5. Download external libraries (Velodyne and Zed)
+'''url
+http://wiki.ros.org/velodyne/Tutorials/Getting%20Started%20with%20the%20Velodyne%20VLP16
+'''
+'''url
+https://www.stereolabs.com/docs/ros/
+'''
+
+5. Now it's set up!
+
+## How to start the rig
+
+0. If a remote computer is used, ssh into the testrig
+```bash
+ssh nvidia@192.168.1.238
+```
+1. Turn on the xbox-controller. Pair if needed.
+2. Start the rig with a launch-file 
+```bash
+roslaunch testrig %LAUNCH_FILE%.launch
+```
+
+Main launch-file:
+testrig.launch
+
+Only sensors:
+demo_sensor.launch
+
+Only xbox-controller:
+demo_xbox.launch
+
 
 ## How to work with branches
 1. If you are not up to date with master you can start with:
