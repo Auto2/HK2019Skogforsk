@@ -17,7 +17,12 @@
   <exec_depend>std_msgs</exec_depend>
 
   <depend>joint_state_publisher</depend>
+  <depend>controller_manager</depend>
+  <depend>robot_state_publisher</depend>
+  <depend>rospy</depend>
+  <depend>rviz</depend>
 
   <export>
   </export>
 </package>
+

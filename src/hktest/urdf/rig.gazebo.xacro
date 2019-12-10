@@ -1,0 +1,137 @@
+<?xml version="1.0" ?>
+<robot name="testrig" xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:arg name="laser_visual" default="false"/>
+
+
+
+<!-- Front -->
+  <gazebo reference="base_link">
+    <material>Gazebo/Grey</material>
+  </gazebo>
+<!-- Front LW-->
+  <gazebo reference="wheel_front_left_link">
+    <mu1>2.0</mu1>
+    <mu2>0.5</mu2>
+    <kp>100000.0</kp>
+    <kd>1.0</kd>
+    <material>Gazebo/FlatBlack</material>
+  </gazebo>
+
+<!-- Front RW-->
+  <gazebo reference="wheel_front_right_link">
+    <mu1>2.0</mu1>
+    <mu2>0.5</mu2>
+    <kp>100000.0</kp>
+    <kd>1.0</kd>
+    <material>Gazebo/FlatBlack</material>
+  </gazebo>
+
+<!-- ______________________________ -->
+<!-- Joint between front and middle -->
+  <gazebo reference="front_link_middle">
+    <kp>100000000.0</kp>
+    <material>Gazebo/Orange</material>
+  </gazebo>
+
+<!-- Middle -->
+  <gazebo reference="middle_base">
+    <material>Gazebo/Grey</material>
+  </gazebo>
+<!-- Middle LW-->
+  <gazebo reference="wheel_middle_left_link">
+    <mu1>2.0</mu1>
+    <mu2>0.5</mu2>
+    <kp>100000.0</kp>
+    <kd>1.0</kd>
+    <material>Gazebo/FlatBlack</material>
+  </gazebo>
+
+<!-- Middle RW-->
+  <gazebo reference="wheel_middle_right_link">
+    <mu1>2.0</mu1>
+    <mu2>0.5</mu2>
+    <kp>100000.0</kp>
+    <kd>1.0</kd>
+    <material>Gazebo/FlatBlack</material>
+  </gazebo>
+<!-- ______________________________ -->
+<!-- Joint between middle and back -->
+  <gazebo reference="middle_link_back">
+    <kp>100000000.0</kp>
+    <material>Gazebo/Orange</material>
+  </gazebo>
+<!-- Back -->
+  <gazebo reference="back_base">
+    <material>Gazebo/Grey</material>
+  </gazebo>
+<!-- Back LW -->
+    <gazebo reference="wheel_back_left_link">
+    <mu1>2.0</mu1>
+    <mu2>0.5</mu2>
+    <kp>100000.0</kp>
+    <kd>1.0</kd>
+    <material>Gazebo/FlatBlack</material>
+  </gazebo>
+<!-- Back RW-->
+  <gazebo reference="wheel_back_right_link">
+    <mu1>2.0</mu1>
+    <mu2>0.5</mu2>
+    <kp>100000.0</kp>
+    <kd>1.0</kd>
+    <material>Gazebo/FlatBlack</material>
+  </gazebo>
+
+
+<!-- ROBOT DONE ABOVE -->
+
+ <!-- camera -->
+ <!--
+  <gazebo reference="camera_link">
+  <sensor name="cam1" type="depth">
+    <update_rate>20</update_rate>
+    <camera>
+      <horizontal_fov>1.047198</horizontal_fov>
+      <image>
+        <width>640</width>
+        <height>480</height>
+        <format>R8G8B8</format>
+      </image>
+      <clip>
+        <near>0.05</near>
+        <far>3</far>
+      </clip>
+    </camera>
+    <plugin name="camera_plugin" filename="libgazebo_ros_openni_kinect.so">
+          <baseline>0.2</baseline>
+          <alwaysOn>true</alwaysOn>
+
+          <updateRate>0.0</updateRate>
+          <cameraName>camera_ir</cameraName>
+          <imageTopicName>/camera/color/image_raw</imageTopicName>
+          <cameraInfoTopicName>/camera/color/camera_info</cameraInfoTopicName>
+          <depthImageTopicName>/camera/depth/image_raw</depthImageTopicName>
+          <depthImageCameraInfoTopicName>/camera/depth/camera_info</depthImageCameraInfoTopicName>
+          <pointCloudTopicName>/camera/depth/points</pointCloudTopicName>
+          <frameName>camera_link</frameName>
+          <pointCloudCutoff>0.5</pointCloudCutoff>
+          <pointCloudCutoffMax>3.0</pointCloudCutoffMax>
+          <distortionK1>0</distortionK1>
+          <distortionK2>0</distortionK2>
+          <distortionK3>0</distortionK3>
+          <distortionT1>0</distortionT1>
+          <distortionT2>0</distortionT2>
+          <CxPrime>0</CxPrime>
+          <Cx>0</Cx>
+          <Cy>0</Cy>
+          <focalLength>0</focalLength>
+          <hackBaseline>0</hackBaseline>
+        </plugin>
+    </sensor>
+    </gazebo>
+-->
+
+</robot>
+
+
+
+

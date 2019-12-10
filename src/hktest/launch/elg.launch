@@ -1,0 +1,163 @@
+<?xml version="1.0"?>
+
+<launch>
+  <!-- ___________________ Arguments________________________-->
+  <arg name="model" default="$(find hktest)/urdf/rig.urdf.xacro"/> <!-- used for all -->
+  <!-- For gazebo simulaion -->
+  <arg name="gui" default="true" />
+  <arg name="verbose" default="true"/>
+  <arg name="multi_robot_name" default=""/>
+  <arg name="x_pos" default="0.0"/>
+  <arg name="y_pos" default="0.0"/>
+  <arg name="z_pos" default="0.0"/>  
+  <arg name="rvizconfig" default="$(find hktest)/rviz/urdf.rviz" />
+  <arg name="headless" default="false"/>
+  <arg name="pub_map_odom_transform" default="true"/>
+  <arg name="use_sim_time" default="true"/>
+
+
+
+
+  <!--__________________________ For simulation ________________________-->
+  <!-- might need this -->
+  <env name="LC_NUMERIC" value="en_US.UTF-8"/>
+
+
+
+ <!-- Set the robot description (such that transforms are published and so the robot can be seen in RViz)-->
+  <param name="robot_description" command="$(find xacro)/xacro --inorder $(arg model)" />
+
+    <!-- spawn robot -->
+  <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" args="-urdf -model testrig -x $(arg x_pos) -y $(arg y_pos) -z $(arg z_pos) -param robot_description" respawn="false" output="screen" />
+
+
+    <!-- Rviz -->
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rvizconfig)" required="true" />
+
+
+<!-- For the sim, waist twist and arduino motor is included in rig.gazebo.urdf -->
+  <node name="motor_controller_node_sim" pkg="hktest" type="motor_controller_node_sim" output="screen" />
+  <node name = "turn_radius_node" pkg = "hktest" type = "turn_radius_node.py" output = "screen"/>
+  <node name = "action_decider_node" pkg = "hktest" type = "action_decider_node.py" output = "screen"/>
+  <node name = "pose_calc_node" pkg = "hktest" type = "pose_calc.py" output = "screen"/>
+
+
+  <!-- Conrollers for driving and steering in sim-mode -->
+  <rosparam file="$(find hktest)/config/joints.yaml" command="load" />
+  <rosparam file="$(find hktest)/config/diffdrive.yaml" command="load"/>
+
+  <node name="rig_controller_manager" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="/joint_state_controller /joint_position_controller /joint_position_controller2 /rig_vel_controller"/>
+
+  <!-- Testrig --> 
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
+  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" respawn="false" output="screen">
+    <param name="publish_frequency" type="double" value="50.0" />
+    <param name="tf_prefix" value=""/>
+  </node>
+
+
+  <!-- GAZEBO  -->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find hktest)/worlds/arena.world"/>
+    <arg name="paused" value="false"/>
+    <arg name="gui" value="$(arg gui)" />
+    <arg name="headless" value="false"/>
+    <arg name="debug" value="false" />
+    <arg name="verbose" value="$(arg verbose)"/>
+  </include>
+
+
+
+<!-- ___________________________ FOR OCTOMAP __________________________________-->
+
+  <node pkg="octomap_server" type="octomap_server_node" name="octomap_server">
+    <param name="resolution" value="0.2" />
+		
+		<!-- fixed map frame (set to 'map' if SLAM or localization running!) -->
+    <param name="frame_id" type="string" value="map" />
+		
+		<!-- maximum range to integrate (speedup!) -->
+    <param name="sensor_model/max_range" value="50.0" />
+		
+		<!-- data source to integrate (PointCloud2) -->
+    <param name="latch" type="bool" value="false" />
+
+    <remap from="cloud_in" to="/velodyne_points" />
+    <param name="odom_frame_id" type="string" value="odom"/>
+    <param name="filter_ground" type="bool" value="true" />
+    <param name="filter_speckles" type="bool" value="true" />
+    <param name="ground_filter/distance" type="double" value="0.2" />
+    <param name="ground_filter/plane_distance" type="double" value="0.2" />
+    <param name="pointcloud_min_z" type="double" value="-2.0" />
+    <param name="pointcloud_max_z" type="double" value="3.0" />
+    <param name="occupancy_min_z" type="double" value="0.0" />
+    <param name="occupancy_max_z" type="double" value="3.0" />
+
+    <param name="base_frame_id" type="string" value="base_link" />
+  </node>
+
+
+
+  <!-- Launch the octomap conversion node -->
+    <!-- <node pkg="grid_map_demos" type="octomap_to_gridmap_demo" name="octomap_to_gridmap_demo" output="screen" /> -->
+
+    <!-- Launch the grid map visualizer 
+    <node pkg="grid_map_visualization" type="grid_map_visualization" name="grid_map_visualization" output="screen" /> -->
+  
+  <!-- Launch the octomap reset node 
+    <node pkg="octo_reset" type="octomap_reset_node" name="octomap_reset_node" output="screen" /> 
+
+  <node pkg="nodelet" type="nodelet" name="pcl_manager" args="manager" output="screen" />
+-->
+
+<node pkg="map_server" type="map_server" args="$(find hktest)/maps/skog.yaml" respawn="false" name="map">
+</node>
+  <!-- ZED STEREO CAMERA LAUNCH CODE -->
+<!--<node pkg="tf" type="static_transform_publisher" name="odom_to_map" 
+         args="0 0 0.045 0 0 0 1.0 map odom 100" />
+-->
+
+  <!--<node name="costmap_node" pkg="costmap_2d" type="costmap_2d_node">
+    <rosparam file="$(find hktest)/config/costmap.yaml" command="load" ns="costmap" />
+  </node>-->
+
+    <!-- Launch the octomap conversion node -->
+    <!--<node pkg="grid_map_demos" type="octomap_to_gridmap_demo" name="octomap_to_gridmap_demo" output="screen" />-->
+    
+    <!-- Launch the grid map visualizer -->
+    <!--<node pkg="grid_map_visualization" type="grid_map_visualization" name="grid_map_visualization" output="screen" />-->
+  
+  <!-- Launch the octomap reset node
+    <node pkg="octo_reset" type="octomap_reset_node" name="octomap_reset_node" output="screen" /> KOMMENTERAT BORT RESET NODEN -->
+
+  <!--<node pkg="nodelet" type="nodelet" name="pcl_manager" args="manager" output="screen" />-->
+  
+  <!-- Run a VoxelGrid filter to clean NaNs and downsample the data -->
+  <!--<node pkg="nodelet" type="nodelet" name="voxel_grid" args="load pcl/VoxelGrid pcl_manager" output="screen">
+      <param name="filter_field_name" value="z" />
+      <param name="filter_limit_min" value="0.2" />
+      <param name="filter_limit_max" value="1.5" />
+      <param name="filter_limit_negative" value="False" />
+      <param name="leaf_size" value="0.25" />
+  </node>-->
+
+
+
+<!-- rosservice call /gazebo/get_model_state "model_name: 'testrig'"  FIND GAZEBO PARAMS!!!-->
+
+<!--
+<node pkg="robot_localization" type="ekf_localization_node" name="ekf_localization_with_gps_imu">
+  <rosparam command="load" file="$(find hktest)/config/ekf_localization.yaml"/>
+</node>
+-->
+    <node name="odom_pub" pkg="hktest" type="odom.py" output="screen" />
+    <node name="map_to_base_link_tf2_broadcaster" pkg="hktest" type="tf_base_map.py" respawn="false" output="screen" />
+ 
+
+
+  <node name="astar_node" pkg="hktest" type="astar.py" output="screen" />
+  <node name="coordinate_list" pkg="hktest" type="coordinate_list.py" output="screen" />
+  <node name="quaternion_to_euler_node" pkg="hktest" type="quaternion_to_euler.py" output="screen" />
+  <node name="coord_transform_map_to_rig_node" pkg="hktest" type="coord_transform_map_to_rig.py" output="screen" />
+
+</launch>

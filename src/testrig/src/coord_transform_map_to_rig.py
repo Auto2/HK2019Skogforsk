@@ -3,7 +3,7 @@
 import numpy as np
 import rospy
 from geometry_msgs.msg import Twist
-from geometry_msgs.msg import Point
+from geometry_msgs.msg import Point, PointStamped
 
 ##-----------------------------DESCRIPTION---------------------------------##
 #Transforms a coordinate in the map frame to _____
@@ -36,7 +36,7 @@ def set_pose(msg):
 
 def set_goal_map(msg):
     global goal_map
-    goal_map = msg
+    goal_map = msg.point
 
 def coord_transform(): #use the measured pose and goal in the map to
     global pose
@@ -64,7 +64,7 @@ def coord_transform(): #use the measured pose and goal in the map to
 
 def main():
     subpose = rospy.Subscriber('zed/zed_node/pose_twist', Twist, set_pose) #estimated rig pose from SLAM
-    subgoal = rospy.Subscriber('goal_map', Point, set_goal_map) #goal in map frame
+    subgoal = rospy.Subscriber('goal_map', PointStamped, set_goal_map) #goal in map frame
     while not rospy.is_shutdown():
         coord_transform()
         rate.sleep()

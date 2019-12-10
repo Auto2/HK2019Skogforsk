@@ -1,0 +1,16 @@
+joint_state_controller:
+  # The joint state controller handles publishing transforms for any moving joints
+  type: "joint_state_controller/JointStateController"
+  publish_rate: 50
+
+# Position controller
+joint_position_controller:
+    type: effort_controllers/JointPositionController
+    joint: front_joint_middle
+    pid: {p: 500.0, i: 0, d: 5.00}
+
+joint_position_controller2:
+    type: effort_controllers/JointPositionController
+    joint: middle_joint_back
+    pid: {p: 350.0, i: 0, d: 5.00}
+
