@@ -22,12 +22,11 @@ echo "export ROS_MASTER_URI=http://192.168.1.238:11311" >> ~/.bashrc
 ```
 
 5. Download external libraries (Velodyne and Zed)
-'''url
+
 http://wiki.ros.org/velodyne/Tutorials/Getting%20Started%20with%20the%20Velodyne%20VLP16
-'''
-'''url
+
 https://www.stereolabs.com/docs/ros/
-'''
+
 
 5. Now it's set up!
 
@@ -40,7 +39,7 @@ ssh nvidia@192.168.1.238
 1. Turn on the xbox-controller. Pair if needed.
 2. Start the rig with a launch-file 
 ```bash
-roslaunch testrig %LAUNCH_FILE%.launch
+roslaunch testrig %LAUNCH_FILE%
 ```
 
 Main launch-file:
