@@ -69,7 +69,7 @@ turnRate = 200 #mm/increment
 
 def xboxTakeover(msg):
     global xbox
-    xbox = msg
+    xbox = msg.data
 
 
 #calculate the turn radius based on waist twist and distance between the waist and motor axes in the top plane
@@ -153,7 +153,7 @@ def calcTurnRate():
     global R_des
     global turnRate
 
-    fractionalTurnRate = abs(int(R_des * 0.25))
+    fractionalTurnRate = abs(int(R_des * 0.2))
     if fractionalTurnRate >= 50 and MIN_TURN_RADIUS < (abs(R_des) - fractionalTurnRate):
         if R_des >= MAX_TURN_RADIUS * 0.3:
             turnRate = fractionalTurnRate
@@ -235,6 +235,7 @@ def doStuff():
 	    #frontAngle = 0
 	    #rearAngle = 0
 	#else:
+	global xbox
 	frontAngle, rearAngle = iterateWaistTwist() #positive angles mean that the testrig should turn clockwise and negative counter-clockwise
 
 	#print("Front angle: " + str(frontAngle) + " Rear Angle: " + str(rearAngle))

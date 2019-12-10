@@ -1,0 +1,96 @@
+<?xml version="1.0"?>
+
+<robot name="testrig" xmlns:xacro="http://ros.org/wiki/xacro">			
+	<transmission name="front_RW_transmisson">
+	    <type>transmission_interface/SimpleTransmission</type>
+	    <joint name="wheel_front_right_joint">
+	      <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+	    </joint>
+	    <actuator name="$front_RW_motor">
+	      <mechanicalReduction>239</mechanicalReduction>
+	      <hardwareInterface>VelocityJointInterface</hardwareInterface>
+	    </actuator>
+
+	</transmission>
+  
+
+	<transmission name="front_LW_transmisson">
+	    <type>transmission_interface/SimpleTransmission</type>
+	    <joint name="wheel_front_left_joint">
+	      <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+	    </joint>
+	    <actuator name="$front_LW_motor">
+	      <mechanicalReduction>239</mechanicalReduction>
+	      <hardwareInterface>VelocityJointInterface</hardwareInterface>
+	    </actuator>
+
+	</transmission>		
+
+	<transmission name="middle_RW_transmisson">
+	    <type>transmission_interface/SimpleTransmission</type>
+	    <joint name="wheel_middle_right_joint">
+	      <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+	    </joint>
+	    <actuator name="$middle_RW_motor">
+	      <mechanicalReduction>239</mechanicalReduction>
+	      <hardwareInterface>VelocityJointInterface</hardwareInterface>
+	    </actuator>
+
+	</transmission>		
+
+	<transmission name="middle_LW_transmisson">
+	    <type>transmission_interface/SimpleTransmission</type>
+	    <joint name="wheel_middle_left_joint">
+	      <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+	    </joint>
+	    <actuator name="$middle_LW_motor">
+	      <mechanicalReduction>239</mechanicalReduction>
+	      <hardwareInterface>VelocityJointInterface</hardwareInterface>
+	    </actuator>
+	</transmission>		
+
+	<transmission name="back_RW_transmisson">
+	    <joint name="wheel_back_right_joint">
+	      <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+	    </joint>
+	    <type>transmission_interface/SimpleTransmission</type>
+	    <actuator name="$back_RW_motor">
+	      <mechanicalReduction>239</mechanicalReduction>
+	      <hardwareInterface>VelocityJointInterface</hardwareInterface>
+	    </actuator>
+	</transmission>		
+
+	<transmission name="back_LW_transmisson">
+	    <type>transmission_interface/SimpleTransmission</type>
+	    <joint name="wheel_back_left_joint">
+	      <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+	    </joint>
+	    <actuator name="$back_LW_motor">
+	      <mechanicalReduction>239</mechanicalReduction>
+	      <hardwareInterface>VelocityJointInterface</hardwareInterface>
+	    </actuator>
+	</transmission>		
+
+	<transmission name="front_steering">
+	    <type>transmission_interface/SimpleTransmission</type>
+	    <joint name="front_joint_middle">
+	      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+	    </joint>
+	    <actuator name="$front_steering_motor">
+	      <mechanicalReduction>1</mechanicalReduction>
+	      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+	    </actuator>
+	</transmission>		
+
+	<transmission name="back_steering">
+	    <type>transmission_interface/SimpleTransmission</type>
+	    <joint name="middle_joint_back">
+	      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+	    </joint>
+	    <actuator name="$back_steering_motor">
+	      <mechanicalReduction>1</mechanicalReduction>
+	      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+	    </actuator>
+	</transmission>		
+
+</robot>

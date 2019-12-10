@@ -34,6 +34,8 @@ class Interpreter:
 	self.pendSelect = 0
 	self.pendButtonState = 0
 
+	self.allpendstate = 0
+
         self.pwm = 10
         self.action = 4 # 4 is idle
 	self.oldAction = 4
@@ -127,8 +129,10 @@ class Interpreter:
 	#RT = joy.axes[4]
 	RB = joy.buttons[5]
 	
-	self.pendAction = 0
-		
+	if (Ybtn == 1):
+	    self.pendAction = 0
+	    self.publishPend()
+
 	# Choose pendulum arm (1-6)
 	if (Ybtn == 1 and self.pendButtonState == 0) :
 	    self.pendSelect += 1
@@ -149,7 +153,92 @@ class Interpreter:
 	#elif (LB == 0 and RB == 0 and not self.pendAction == 0) :
 	#    self.pendAction = 0
 	#    self.publishPend()
-	self.publishPend()
+	#self.publishPend()
+	
+	# ------ CONTROL ALL PEND ARMS (TOGGLE UP/DOWN) ----
+	optBtn = joy.buttons[6]
+	if (optBtn == 1 and self.allpendstate == 0):
+	    self.allpendstate = 1
+	elif (optBtn == 0 and self.allpendstate == 1):
+	    self.allpendstate = 0
+	
+	if (optBtn == 1 and LB == 1 and self.allpendstate == 1 and self.takeover == 0):
+	    self.pendAction = 1
+	    self.publishPend()
+	    time.sleep(0.1)
+	    self.pendAction = 8
+	    self.publishPend()
+	    time.sleep(0.1)
+	    self.pendAction = 2
+	    self.publishPend()
+	    time.sleep(0.1)
+	    self.pendAction = 8
+	    self.publishPend()
+	    time.sleep(0.1)
+	    self.pendAction = 3
+	    self.publishPend()
+	    time.sleep(0.1)
+	    self.pendAction = 8
+	    self.publishPend()
+	    time.sleep(0.1)
+	    self.pendAction = 4
+	    self.publishPend()
+	    time.sleep(0.1)
+	    self.pendAction = 8
+	    self.publishPend()
+	    time.sleep(0.1)
+	    self.pendAction = 5
+	    self.publishPend()
+	    time.sleep(0.1)
+	    self.pendAction = 8
+	    self.publishPend()
+	    time.sleep(0.1)
+	    self.pendAction = 6
+	    self.publishPend()
+	    time.sleep(0.1)
+	    self.pendAction = 8
+	    self.publishPend()
+	    time.sleep(0.1)
+	    self.allpendstate = 0
+	elif (optBtn == 1 and RB == 1 and self.allpendstate == 1 and self.takeover == 0):
+	    self.pendAction = 1
+	    self.publishPend()
+	    time.sleep(0.1)
+	    self.pendAction = 9
+	    self.publishPend()
+	    time.sleep(0.1)
+	    self.pendAction = 2
+	    self.publishPend()
+	    time.sleep(0.1)
+	    self.pendAction = 9
+	    self.publishPend()
+	    time.sleep(0.1)
+	    self.pendAction = 3
+	    self.publishPend()
+	    time.sleep(0.1)
+	    self.pendAction = 9
+	    self.publishPend()
+	    time.sleep(0.1)
+	    self.pendAction = 4
+	    self.publishPend()
+	    time.sleep(0.1)
+	    self.pendAction = 9
+	    self.publishPend()
+	    time.sleep(0.1)
+	    self.pendAction = 5
+	    self.publishPend()
+	    time.sleep(0.1)
+	    self.pendAction = 9
+	    self.publishPend()
+	    time.sleep(0.1)
+	    self.pendAction = 6
+	    self.publishPend()
+	    time.sleep(0.1)
+	    self.pendAction = 9
+	    self.publishPend()
+	    time.sleep(0.1)
+	    self.allpendstate = 0
+	
 	
 	# -----------------------------------------------------
 
@@ -202,8 +291,8 @@ class Interpreter:
     def publishPend(self):
 	pend_msg = Int64()
 	pend_msg = self.pendAction
-	if self.takeover == 1:
-	    self.pubPend.publish(pend_msg)
+	#if self.takeover == 1:
+	self.pubPend.publish(pend_msg)
 
     def publish_pwm(self):
 	pwm_msg = Int64()
@@ -214,8 +303,8 @@ class Interpreter:
     def publishTakeover(self):
 	takeover_msg = Int64()
 	takeover_msg.data = self.takeover
-	if self.takeover == 1:
-	    self.pubTakeoverGoal.publish(takeover_msg)
+	#if self.takeover == 1:
+	self.pubTakeoverGoal.publish(takeover_msg)
 
 def listener():
     rospy.init_node('interpreter_node',anonymous = True)

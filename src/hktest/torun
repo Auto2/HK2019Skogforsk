@@ -1,0 +1,13 @@
+To run the simulation package:
+ - Start by creating a clone of the hktest package 
+ - install the other needed packages, velodyne_simulator and grid_map
+
+The next steps are
+ - catkin_make 
+ - roslaunch hktest testrig_sim.launch t to use gazebo and rviz 
+   when the file is launched it starts both rviz and gazebo. It
+   is possible to change the gazebo world between the ones already
+   constructed or build a new world.
+ - To change what is visualized in rviz and how it looks change the urdf.rviz file
+
+
