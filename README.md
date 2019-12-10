@@ -55,9 +55,9 @@ Only xbox-controller:
 **demo_xbox.launch**
 
 3. **Optional:** Start rviz
-'''bash
+```bash
 rviz
-''' 
+``` 
 
 
 ## How to work with branches
