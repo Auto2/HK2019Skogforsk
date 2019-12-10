@@ -21,12 +21,12 @@ echo "export ROS_IP=192.168.1.238" >> ~/.bashrc
 echo "export ROS_MASTER_URI=http://192.168.1.238:11311" >> ~/.bashrc
 ```
 
-5. Download external libraries (Velodyne and Zed)
+5. Download external libraries if needed
 
-http://wiki.ros.org/velodyne/Tutorials/Getting%20Started%20with%20the%20Velodyne%20VLP16
-
-https://www.stereolabs.com/docs/ros/
-
+[Velodyne](http://wiki.ros.org/velodyne/Tutorials/Getting%20Started%20with%20the%20Velodyne%20VLP16)
+[Zed](https://www.stereolabs.com/docs/ros/)
+[Octomap](http://wiki.ros.org/octomap)
+[Xbox-controller drivers](https://github.com/atar-axis/xpadneo)
 
 5. Now it's set up!
 
@@ -43,13 +43,13 @@ roslaunch testrig %LAUNCH_FILE%
 ```
 
 Main launch-file:
-testrig.launch
+**testrig.launch**
 
 Only sensors:
-demo_sensor.launch
+**demo_sensor.launch**
 
 Only xbox-controller:
-demo_xbox.launch
+**demo_xbox.launch**
 
 
 ## How to work with branches
